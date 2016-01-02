@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas draw image</title>
+</head>
+<body style="background: #000;">
+
+<canvas id="canvas" style="display: block;margin: 0 auto;border: 1px solid #aaa;">
+    您的浏览器不支持canvas
+</canvas>
+<input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0" style="display:block;margin: 20px auto;width: 400px;" />
+
+<canvas id="watermark-canvas" style="display: none;margin: 0 auto;border: 1px solid #aaa;">
+    您的浏览器不支持canvas
+</canvas>
+
+<canvas id="offCanvas" style="display: none;"></canvas>
+
+<script>
+    var canvas = document.getElementById("canvas");
+    var slider = document.getElementById("scale-range");
+    var context = canvas.getContext("2d");
+    var image = new Image();
+
+    var watermarkCanvas = document.getElementById("watermark-canvas");
+    var watermarkContext = watermarkCanvas.getContext("2d");
+
+    var offCanvas = document.getElementById("offCanvas");
+    var offContext = offCanvas.getContext("2d");
+
+    var byScalaImageWidth;
+    var byScalaImageHeight;
+    var bsdx;
+    var bsdy;
+
+    var offScale;
+    window.onload = function(){
+        canvas.width = 480;
+        canvas.height = 640;
+
+        var scale = slider.value;
+
+        image.src="assets/img/3.JPG";
+        image.onload = function(){
+            //context.drawImage( image, 0, 0, canvas.width, canvas.height);
+            //context.drawImage( image, 150, 400, 700, 850,  0, 0, canvas.width, canvas.height );
+            drawImageByScale( scale );
+            var slider_isMouseDown = false;
+            slider.onmousedown = function(){
+                slider_isMouseDown = true;
+            };
+            slider.onmousemove = function(){
+                if(slider_isMouseDown == true){
+                    scale = slider.value;
+                    drawImageByScale( scale );
+                }
+            };
+            slider.onmouseup = function(){
+                slider_isMouseDown = false;
+            };
+            slider.onmouseout = function(){
+                slider_isMouseDown = false;
+            };
+        };
+
+        //setup watermark canvas
+        watermarkCanvas.width = 450;
+        watermarkCanvas.height = 60;
+
+        watermarkContext.font = "bold 20px April";
+        watermarkContext.fillStyle = "rgba(255, 255, 255, 0.35)";
+        watermarkContext.textBaseline = "middle";
+        watermarkContext.fillText("亚洲第一湿地公园 额尔古纳 小鱼&小凡", 15, 30);
+
+    };
+
+    function windowToCanvas(x, y){
+        var bbox = canvas.getBoundingClientRect();
+        return { x: x - bbox.left, y: y - bbox.top }
+    }
+
+    canvas.onmousemove = function(e){
+        e.preventDefault();
+        var point = windowToCanvas(e.clientX, e.clientY);
+        drawCanvasWithMagnifier(true, point);
+    };
+
+    canvas.onmouseup = function(e){
+        e.preventDefault();
+        drawCanvasWithMagnifier(false);
+    };
+
+    canvas.onmouseout = function(e){
+        e.preventDefault();
+        drawCanvasWithMagnifier(false);
+    };
+
+    function drawCanvasWithMagnifier(isShowMagnifier, point){
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage( image, bsdx, bsdy, byScalaImageWidth, byScalaImageHeight);
+        context.drawImage( watermarkCanvas, 0, 0);
+        //context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        if(isShowMagnifier == true){
+            drawnMagnifier(point);
+        }
+    }
+
+    function drawnMagnifier(point){
+        var imageLG_cx = point.x * offScale;
+        var imageLG_cy = point.y * offScale;
+
+        var mr = 160;
+
+        var sx = imageLG_cx - mr;
+        var sy = imageLG_cy - mr;
+
+        var dx = point.x - mr;
+        var dy = point.y - mr;
+
+        context.save();
+
+        context.lineWidth = 10.0;
+        context.strokeStyle = "#5EFF22";
+
+        context.beginPath();
+        context.arc(point.x, point.y, mr, 0, Math.PI*2);
+        context.stroke();
+
+        context.clip();
+
+        context.drawImage(offCanvas, sx, sy, 2*mr, 2*mr, dx, dy, 2*mr, 2*mr);
+
+        context.restore();
+    }
+
+    function drawImageByScale( scale ){
+        byScalaImageWidth = 480 * scale;
+        byScalaImageHeight = 640 * scale;
+
+        /*
+        var sx = imageWidth/2 - canvas.width/2;
+        var sy = imageHeight/2 - canvas.height/2
+        context.drawImage( image, sx, sy, canvas.width, canvas.height , 0, 0, canvas.width, canvas.height );
+        */
+        offCanvas.width = image.width;
+        offCanvas.height = image.height;
+        offScale = offCanvas.width / canvas.width / scale;
+        bsdx = canvas.width / 2 - byScalaImageWidth / 2;
+        bsdy = canvas.height / 2 - byScalaImageHeight / 2;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage( image, bsdx, bsdy, byScalaImageWidth, byScalaImageHeight);
+        context.drawImage( watermarkCanvas, 0, 0);
+        offContext.drawImage(image, 0, 0);
+        offContext.drawImage( watermarkCanvas, 0, 0);
+    }
+
+</script>
+
+</body>
+</html>
