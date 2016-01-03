@@ -32,7 +32,6 @@ window.onload = function(){
             }
             onceScrollBase = onceScrollBase + onceScroll;
 
-            console.log("newImgs.length-" + newImgs.length)
             for(var i = 0; i < newImgs.length; i++){
                 loadCount(newImgs[i]);
             }
