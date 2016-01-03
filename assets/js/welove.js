@@ -49,6 +49,7 @@ function loadStart(){
     }
 }
 
+// 窗口大小改变时 从本地缓存刷新页面
 window.onresize = function () {
 	location.reload();
 }
