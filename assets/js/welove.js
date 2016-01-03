@@ -1,14 +1,18 @@
 /**
  * Created by XFun on 2016/1/3.
  */
+var initImgs = 30;/* 初始化总需要加载的图片数*/
+var imgLoadCount = 0; /* 这个是计数器，现在这个计数器是0 */
+
 window.onload = function(){
-    initData(30);
+    initData(initImgs);
     var onceScroll = 10;
     var onceScrollBase = 31;
     var scrollEnd = false;
     window.onscroll = function(){
         if(checkScrollSlide() && !scrollEnd){
             var oParent = document.getElementById('main');
+            var newImgs = [];
             // 将数据块渲染到当前页面的尾部
             for(var i = onceScrollBase; i < onceScrollBase + onceScroll; i++){
                 if(i > 81){
@@ -23,19 +27,30 @@ window.onload = function(){
                 oBox.appendChild(oPic);
                 var oImg = document.createElement('img');
                 oImg.src = "assets/img/welove/welove_" + i + ".jpg";
+                newImgs.push(oImg);
                 oPic.appendChild(oImg);
             }
             onceScrollBase = onceScrollBase + onceScroll;
-            setTimeout(function(){waterfall('main', 'box')}, 800);
+
+            console.log("newImgs.length-" + newImgs.length)
+            for(var i = 0; i < newImgs.length; i++){
+                loadCount(newImgs[i]);
+            }
+            var timer = setInterval(function() {
+                if (imgLoadCount == (onceScrollBase - 1)) {
+                    waterfall('main', 'box');
+                    clearInterval(timer)
+                }
+            }, 100)
         }
     }
 };
 
 // 初始化数据
-function initData(imgs){
+function initData(initImgs){
     var oParent = document.getElementById('main');
     // 将数据块渲染到当前页面的尾部
-    for(var i = 1; i <= imgs; i++){
+    for(var i = 1; i <= initImgs; i++){
         var oBox = document.createElement('div');
         oBox.className = 'box';
         oParent.appendChild(oBox);
@@ -43,10 +58,39 @@ function initData(imgs){
         oPic.className = 'pic';
         oBox.appendChild(oPic);
         var oImg = document.createElement('img');
+        oImg.className = 'loveimg';
         oImg.src = "assets/img/welove/welove_" + i + ".jpg";
         oPic.appendChild(oImg);
     }
-    setTimeout(function(){waterfall('main', 'box')}, 1000);
+
+    var oImgs = getByClass(oParent,'loveimg');
+    for(var i = 0; i < oImgs.length; i++){
+        loadCount(oImgs[i]);
+    }
+
+    var timer = setInterval(function() {
+        if (imgLoadCount == initImgs) {
+            waterfall('main', 'box');
+            clearInterval(timer)
+        }
+    }, 100)
+}
+
+function loadCount(img){
+    loadImage(img, function(){
+        imgLoadCount++;
+    });
+}
+
+function loadImage(img, callback) {
+    if (img.complete) { // 如果图片已经存在于浏览器缓存，直接调用回调函数
+        callback(img);
+        return; // 直接返回，不用再处理onload事件
+    }else{
+        img.onload = function () { //图片下载完毕时异步调用callback函数。
+            callback(img);
+        };
+    }
 }
 
 function waterfall(parent,box){
